@@ -1,10 +1,7 @@
 FROM continuumio/anaconda
 MAINTAINER Jacky MA <jacky.ckma@gmail.com>
 RUN apt-get -qq update
-RUN git clone https://github.com/jackyckma/yelpanalysis.git /yelpanalysis
 RUN pip install --upgrade gensim pymongo
-# ADD data/yelp_dataset_challenge_round9.tar /yelpanalysis/data
-
 
 # Install MongoDB.
 RUN \
@@ -22,7 +19,7 @@ EXPOSE 28017
 
 VOLUME ["/datamount"]
 
-ENTRYPOINT service mongodb restart && bash
+RUN git clone https://github.com/jackyckma/yelpanalysis.git /yelpanalysis
 
 
 
