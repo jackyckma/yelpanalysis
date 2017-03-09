@@ -27,7 +27,7 @@ sudo docker exec yelp-dev mongoimport --db yelp --collection review /datamount/y
 sudo docker exec yelp-dev mongoimport --db yelp --collection tip /datamount/yelp_academic_dataset_tip.json
 sudo docker exec yelp-dev mongoimport --db yelp --collection user /datamount/yelp_academic_dataset_user.json
 
-sudo docker exec jupyter notebook
-sudo docker exec python /yelpanalysis/analysis.py
+sudo docker exec yelp-dev jupyter notebook
+sudo docker exec yelp-dev python /yelpanalysis/analysis.py
 sudo docker exec -i -t yelp-dev /bin/bash
 
