@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 
-
-import json
 import pandas as pd
-
-file_business = 'data/yelp_academic_dataset_business.json'
-file_checkin = 'data/yelp_academic_dataset_checkin.json'
-file_review = 'data/yelp_academic_dataset_review.json'
-file_tip = 'data/yelp_academic_dataset_tip.json'
-file_user = 'data/yelp_academic_dataset_user.json'
+from pymongo import MongoClient
 
 
-with open(file_user) as json_data:
-    data = json_data.read()
-    
+client = MongoClient('localhost', 27017)
+db = client.yelp
+
+business = db.business
+checkin = db.checkin
+review = db.review
+tip = db.tip
+user = db.user
+
+
+df = pd.DataFrame(list(business.find({}, {'id':1, 'categories':1})))
+
+print df
