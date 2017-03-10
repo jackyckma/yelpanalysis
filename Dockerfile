@@ -71,6 +71,7 @@ EXPOSE 28017
 
 VOLUME ["/datamount"]
 
+ADD script /yelpanalysis/
 
 
 

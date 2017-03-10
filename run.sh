@@ -39,6 +39,6 @@ docker exec yelp-dev mongoimport --db yelp --collection review /datamount/yelp_a
 docker exec yelp-dev mongoimport --db yelp --collection tip /datamount/yelp_academic_dataset_tip.json
 docker exec yelp-dev mongoimport --db yelp --collection user /datamount/yelp_academic_dataset_user.json
 
-docker exec yelp-dev python /yelpanalysis/analysis.py
+docker exec yelp-dev python /yelpanalysis/yelpanalysis.py
 #docker exec -i -t yelp-dev /bin/bash
 
