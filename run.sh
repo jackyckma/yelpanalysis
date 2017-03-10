@@ -15,7 +15,11 @@ if [ -f "data/yelp_academic_dataset_business.json" ] &&
    [ -f "data/yelp_academic_dataset_tip.json" ] &&
    [ -f "data/yelp_academic_dataset_user.json" ]; then
    echo "json files exist. untar skipped."
-   sleep 20
+   until nc -z $(sudo docker inspect --format'{{.NetworkSettings.IPAddress}}' yelp-dev) 27017
+   do
+      echo "waiting for mongod..."
+      sleep 5
+   done
 else
    echo "untar compressed file."
    sudo docker exec yelp-dev tar xvzf /datamount/yelp_dataset_challenge_round9.tar -C /datamount
@@ -27,7 +31,6 @@ sudo docker exec yelp-dev mongoimport --db yelp --collection review /datamount/y
 sudo docker exec yelp-dev mongoimport --db yelp --collection tip /datamount/yelp_academic_dataset_tip.json
 sudo docker exec yelp-dev mongoimport --db yelp --collection user /datamount/yelp_academic_dataset_user.json
 
-sudo docker exec yelp-dev jupyter notebook
 sudo docker exec yelp-dev python /yelpanalysis/analysis.py
 sudo docker exec -i -t yelp-dev /bin/bash
 
