@@ -33,16 +33,19 @@ believes its a technique worth drilling into.
 
 
 ## SETUP
-1. Git clone the project to local harddisk
-git clone https://github.com/jackyckma/yelpanalysis.git
+1. Git clone the project to local harddisk: 
+        `git clone https://github.com/jackyckma/yelpanalysis.git`
 
-2. Download the Yelp data set
-Get the tar file (yelp_dataset_challenge_round9.tar) from https://www.yelp.com/dataset_challenge/dataset and put it in the project subfolder 'data/'
+2. Download the Yelp data set from https://www.yelp.com/dataset_challenge/dataset and put the tar file (yelp_dataset_challenge_round9.tar) in the project subfolder 'data/'
 
 3. BUILD and PREPARE docker image: 
-sudo ./run.sh -b
-Note: the training of doc2vec model is time consuming, it takes about 10 minutes on AWS m4.xlarge instance.
+
+        sudo ./run.sh -b
+
+    Note: the training of doc2vec model is time consuming, it takes about 10 minutes on AWS m4.xlarge instance.
 
 4. SUBMIT query to docker image: 
-./query.sh l 'Burger King'
-./query.sh s 'Best burger place in the town'
+
+        ./query.sh l 'Burger King'
+        
+        ./query.sh s 'Best burger place in the town'
