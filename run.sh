@@ -41,6 +41,6 @@ docker exec yelp-dev mongoimport --db yelp --collection user /datamount/yelp_aca
 
 docker exec yelp-dev mkdir /yelpanalysis
 docker cp script yelp-dev:/yelpanalysis/
-docker exec yelp-dev python /yelpanalysis/script/yelpanalysis.py
+docker exec yelp-dev python /yelpanalysis/script/train.py
 #docker exec -i -t yelp-dev /bin/bash
 
