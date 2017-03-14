@@ -1,10 +1,12 @@
-##DESCRIPTION
+# Yelp Data Analysis
+
+## DESCRIPTION
 The program trys to build a recommender system/query system based on users comments. Doc2Vec is employed
 on the reviews to build a docvec model. Querys can be conducted either with label (i.e. name of a restuarant)
 or with sentence (e.g. 'best burger restaurant').
 
 
-##STRUCTURE
+## STRUCTURE
 All the scripts are in the GitHub repositary. However, due to license concern, user have to download the
 data from Yelp in order to run the program.
 
@@ -17,7 +19,7 @@ sudo docker exec yelp-dev python /yelpanalysis/script/query.py l 'Burger King'
 sudo docker exec yelp-dev python /yelpanalysis/script/query.py s 'Best burger place in the town'
 
 
-##EVALUATION
+## EVALUATION
 While doc2vec is a new technology trying to capture the sementics of paragraphs, in our case, the result
 doesn't seem really good. Quite often when user searching for a particular food (e.g. burger) and there
 will be other kind of restaurants in the results. One of the reason is that the model trys to capture 
@@ -30,14 +32,15 @@ industry: sentiment prediction, social-platform analysis, trend prediction from 
 believes its a technique worth drilling into.
 
 
-##SETUP
+## SETUP
 1. Git clone the project to local harddisk
 git clone https://github.com/jackyckma/yelpanalysis.git
 
-2. Download the Yelp data set (https://www.yelp.com/dataset_challenge/dataset) and put the file yelp_dataset_challenge_round9.tar in the project subfolder data/
+2. Download the Yelp data set
+Get the tar file (yelp_dataset_challenge_round9.tar) from https://www.yelp.com/dataset_challenge/dataset and put it in the project subfolder 'data/'
 
 3. BUILD and PREPARE docker image: 
-sudo ./run.sh
+sudo ./run.sh -b
 
 4. SUBMIT query to docker image: 
 sudo docker exec yelp-dev python /yelpanalysis/script/query.py l 'Burger King'
