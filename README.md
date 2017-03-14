@@ -41,6 +41,7 @@ Get the tar file (yelp_dataset_challenge_round9.tar) from https://www.yelp.com/d
 
 3. BUILD and PREPARE docker image: 
 sudo ./run.sh -b
+Note: the training of doc2vec model is time consuming, it takes about 10 minutes on AWS m4.xlarge instance.
 
 4. SUBMIT query to docker image: 
 sudo docker exec yelp-dev python /yelpanalysis/script/query.py l 'Burger King'

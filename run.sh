@@ -39,6 +39,7 @@ docker exec yelp-dev mongoimport --db yelp --collection review /datamount/yelp_a
 docker exec yelp-dev mongoimport --db yelp --collection tip /datamount/yelp_academic_dataset_tip.json
 docker exec yelp-dev mongoimport --db yelp --collection user /datamount/yelp_academic_dataset_user.json
 
+docker exec yelp-dev python -m nltk.downloader stopwords
 docker exec yelp-dev mkdir /yelpanalysis
 docker cp script yelp-dev:/yelpanalysis/
 docker exec yelp-dev python /yelpanalysis/script/train.py
