@@ -4,6 +4,8 @@ RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		numactl \
 	&& rm -rf /var/lib/apt/lists/*
+RUN apt-get install build-essential python-dev
+RUN python -m nltk.downloader stopwords
 RUN pip install --upgrade gensim pymongo
 
 # Install MongoDB.
