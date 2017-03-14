@@ -119,7 +119,7 @@ class YelpDocumentModel(object):
 class Regressor(object):
     def __init__(self, doc2vec_model):
         from sklearn.ensemble import RandomForestRegressor
-        self.regressor = RandomForestRegressor(n_estimators=20, n_jobs=4)
+        self.regressor = RandomForestRegressor(n_estimators=20, n_jobs=-1)
         
         self.doc2vec_model = doc2vec_model
         self.train_regressor()
@@ -129,12 +129,13 @@ class Regressor(object):
         train_labels = df_context['rev_stars'].values
         
         for i, r_id in enumerate(df_context['review_id']):
-            train_arrays[i]=self.doc2vec_model.docvecs[r_id]
+            train_arrays[i]=self.doc2vec_model.model.docvecs[r_id]
 
+        print('fitting...')
         self.regressor.fit(train_arrays, train_labels)
 
     def predict_stars(self, sentence):
-        inferred_vec = self.doc2vec_model.infer_vector(sentence.lower().split())
+        inferred_vec = self.doc2vec_model.model.infer_vector(sentence.lower().split())
         self.regressor.predict(inferred_vec.reshape(1, -1))
         
         

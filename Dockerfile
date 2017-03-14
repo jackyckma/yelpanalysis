@@ -2,11 +2,10 @@ FROM continuumio/anaconda
 MAINTAINER Jacky MA <jacky.ckma@gmail.com>
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
-		numactl \
+		numactl python2.7-dev build-essential libatlas3-base libatlas-base-dev\
 	&& rm -rf /var/lib/apt/lists/*
-RUN apt-get install build-essential python-dev
-RUN python -m nltk.downloader stopwords
-RUN pip install --upgrade gensim pymongo
+RUN pip install --upgrade gensim pymongo nltk
+RUN python -m nltk.downloader -d /usr/share/nltk_data stopwords
 
 # Install MongoDB.
 RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
