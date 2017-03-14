@@ -3,8 +3,8 @@
 import pandas as pd
 from pymongo import MongoClient
 
-client = MongoClient('192.168.56.102', 27017)
-# client = MongoClient('localhost', 27017)
+# client = MongoClient('192.168.56.102', 27017)
+client = MongoClient('localhost', 27017)
 db = client.yelp
 
 business = db.business

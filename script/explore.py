@@ -208,7 +208,7 @@ class YelpDocumentModel(object):
 if __name__=='__main__':
 
     print('loading data...')
-    yelp_data = YelpData(ip_address='192.168.56.102', city='Las Vegas')
+    yelp_data = YelpData(ip_address='localhost', city='Las Vegas')
     l_business, l_reviews = yelp_data.get_data()
     print('elapsed time:[{:.2f}s]'.format(elapsed_time()))
     
