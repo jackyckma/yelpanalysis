@@ -32,6 +32,23 @@ def elapsed_time():
     time_diff = new_time - last_time
     last_time = new_time
     return time_diff
+
+class Tokenizer(object):
+    def __init__(self):
+        self.tokenizer = RegexpTokenizer(r'\w+')
+        self.stoplist = set(stopwords.words('english'))
+        self.p_stemmer = PorterStemmer()
+
+    def _tokenize(self, in_text):
+        tokens = self.tokenizer.tokenize(in_text.lower())
+        stopped_tokens = [i for i in tokens if not i in self.stoplist]
+#            return [p_stemmer.stem(i) for i in stopped_tokens]
+        return stopped_tokens
+    
+    def tokenize_list(self, l_text):
+        l_tokenized_text = [self._tokenize(text) for text in l_text]
+        return l_tokenized_text
+    
     
 class YelpData(object):
     def __init__(self, city, ip_address, port=27017):
@@ -40,42 +57,38 @@ class YelpData(object):
         self.city = city
 
         
-    def business(self):
+    def get_data(self):
         # Business ID
         pipeline = [
-            {'$match':{'stars':{'$gte':4},
+            {'$match':{'stars':{'$gte':1},
                        'city':self.city,
                        'categories':'Restaurants'}},
+            {'$sample':{'size':2000}},
             {'$project':{'id':1, 'business_id':1, 'name':1, 'address':1, 'stars':1, 'review_count':1, 'categories':1}},
             ]
-        record_set = self.db.business.aggregate(pipeline)
-        df = pd.DataFrame(list(record_set))
-        self.df_business = df
-        return df
+        l_business = list(self.db.business.aggregate(pipeline))
+        
+        l_b_id = [record['business_id'] for record in l_business]
 
-    def review(self, tokenize=True):
         # Reviews
-        l_business = list(self.business()['business_id'].values)
         pipeline = [
-            {'$match':{'business_id':{'$in':l_business}}},
-            {'$project':{'id':1, 'business_id':1, 'text':1}}
+            {'$match':{'business_id':{'$in':l_b_id}}},
+            {'$project':{'id':1, 'business_id':1, 'user_id':1, 'useful':1, 'stars':1, 'text':1}}
             ]
         record_set = self.db.review.aggregate(pipeline)
-        b_review = collections.namedtuple('b_review', 'business_id text')
-        texts = [b_review(business_id=record['business_id'], 
+        b_review = collections.namedtuple('b_review', 'business_id user_id useful rev_stars text')
+        l_texts = [b_review(business_id=record['business_id'],
+                          user_id=record['user_id'],
+                          useful=record['useful'],
+                          rev_stars=record['stars'],
                           text=record['text']) for record in record_set]
+        return l_business, l_texts
 
-        return texts
     
 class YelpModel(object):
-    def __init__(self, l_business_reviews):
-        self.l_business_reviews = l_business_reviews
-        self.l_business = [record.business_id for record in l_business_reviews]
-        self.l_text = [record.text for record in l_business_reviews]
-        
-        print('tokenizing...')
-        self.l_tokenized_text = self.tokenize(self.l_text)
-        print('elapsed time:[{:.2f}s]'.format(elapsed_time()))
+    def __init__(self, l_text, df_context):
+        self.df_context = df_context
+        self.l_text = l_text
         
         self.m_dict = None
         self.l_bow = None
@@ -125,19 +138,8 @@ class YelpModel(object):
     
     def tokenize(self, l_text):
 
-        tokenizer = RegexpTokenizer(r'\w+')
-        stoplist = set(stopwords.words('english'))
-        p_stemmer = PorterStemmer()
-        
-        def _tokenize(in_text):
-            tokens = tokenizer.tokenize(in_text.lower())
-            stopped_tokens = [i for i in tokens if not i in stoplist]
-#            return [p_stemmer.stem(i) for i in stopped_tokens]
-            return stopped_tokens
-
-        l_tokenized_text = [_tokenize(text) for text in l_text]
-        return l_tokenized_text
-
+        tokenizer = Tokenizer()
+        return tokenizer.tokenize(l_text)
     
     def get_bow(self, l_tokenized_text):
         return [self.m_dict.doc2bow(tokenized_text) for tokenized_text in l_tokenized_text] 
@@ -170,60 +172,89 @@ class YelpModel(object):
             
             
 class YelpDocumentModel(object):
-    def __init__(self, df_business, yelp_model):
-        self.df_business = df_business
-        self.yelp_model = yelp_model
-
-    def doc_vector(self, words):
-        m_wv = self.yelp_model.m_w2v
-        word_collection = set(m_wv.wv.index2word)
-        l = [m_wv[word] for word in words if word in word_collection]
-        return np.mean(l, axis=0)
-           
-    def biz_vector(self):
-        l = yelp_model.l_business
-        d={}
-        for idx, item in enumerate(l):
-            d[item] = d.get(item, []) + [idx]
-
-        d2={}
+    def __init__(self, l_text, df_context):
+        self.l_text = l_text
+        self.df_context = df_context
+    
+    def train(self):
+        model = models.doc2vec.Doc2Vec(size=150, min_count=2, iter=55)
+        model.build_vocab(self.process_input(self.l_text, self.df_context))
+        model.train(self.process_input(self.l_text, self.df_context))
+        self.model = model
+        return self.model
         
-        _i = 0
-        for key in d:
-            l_reviews = [self.yelp_model.l_tokenized_text[i] for i in d[key]]
-            l_reviewvecs = [self.doc_vector(review) for review in l_reviews]
-            d2[key] = np.mean(l_reviewvecs, axis=0)
-            _i += 1
-            print('{0}:{1}'.format(_i, key))
+    def process_input(self, l_text, df_context):
+        for idx, item in enumerate(l_text):
+            record = df_context.iloc[idx]
+            tags = record['categories'] + \
+                                  [record['name'],
+                                   record['stars'],
+                                   record['rev_stars']]  
+            yield models.doc2vec.TaggedDocument(l_text[idx], tags)
+            
+    def infer_from_sentence(self, sentence, n=10):
+        inferred_vec = self.model.infer_vector(sentence.lower().split())
+        sims = self.model.docvecs.most_similar([inferred_vec], topn=n)
+        return sims
 
-        return d2
+    def infer_from_label(self, label, n=10):
+        vec = self.model.docvecs[label]
+        sims = self.model.docvecs.most_similar([vec], topn=n)
+        return sims        
+        
+        
+        
         
 if __name__=='__main__':
 
     print('loading data...')
-    yelp_data = YelpData(ip_address='localhost', city='Las Vegas')
-    df_business = yelp_data.business()
-    l_reviews = yelp_data.review()
+    yelp_data = YelpData(ip_address='192.168.56.102', city='Las Vegas')
+    l_business, l_reviews = yelp_data.get_data()
+    print('elapsed time:[{:.2f}s]'.format(elapsed_time()))
+    
+    print('tokenizing...')
+    tokenizer = Tokenizer()
+    l_text = tokenizer.tokenize_list([record.text for record in l_reviews])
+    print('elapsed time:[{:.2f}s]'.format(elapsed_time()))
+    
+    print('merging data...')
+    df_context = pd.DataFrame([{'business_id':record.business_id,
+                   'user_id':record.user_id, 
+                   'useful':record.useful,
+                   'rev_stars':record.rev_stars} for record in l_reviews])
+    df_context = pd.merge(df_context, 
+                          pd.DataFrame(l_business),
+                          on='business_id')    
     print('elapsed time:[{:.2f}s]'.format(elapsed_time()))
 
-    print('building models...')
-    yelp_model = YelpModel(l_reviews)
+
+    print('building doc2vec model...')
+    yelp_doc_model = YelpDocumentModel(l_text, df_context)
+    yelp_doc_model.train()
+    print('elapsed time:[{:.2f}s]'.format(elapsed_time()))
+
+    print('demo...')
+    yelp_doc_model.infer_from_sentence('best burger with good service')
+    yelp_doc_model.infer_from_sentence('best burger with cheap price')
+    yelp_doc_model.infer_from_sentence('best sushi')
+#    yelp_model = YelpModel(l_reviews, df_business)
 
 #    print('top similar in lsi')
 #    yelp_model.top_similar('burger is the best!')
 #
-    print('w2v')
-    yelp_model.train_w2v()
-    yelp_model.m_w2v.most_similar(positive=['burger', 'cereal'], negative=['lady'], topn=1)
-    yelp_model.m_w2v.doesnt_match("man cereal rib lunch".split())
-    yelp_model.m_w2v.similarity('woman', 'man')
-    yelp_model.m_w2v.similar_by_word('burger', topn=10, restrict_vocab=None)
+#    print('w2v')
+#    yelp_model.train_w2v()
+#    yelp_model.m_w2v.most_similar(positive=['burger', 'cereal'], negative=['lady'], topn=1)
+#    yelp_model.m_w2v.doesnt_match("man cereal rib lunch".split())
+#    yelp_model.m_w2v.similarity('woman', 'man')
+#    yelp_model.m_w2v.similar_by_word('burger', topn=10, restrict_vocab=None)
 
 
-    yelp_doc_model = YelpDocumentModel(df_business, yelp_model)
+#    yelp_doc_model = YelpDocumentModel(df_business, yelp_model)
     
-    bv = yelp_doc_model.biz_vector()
+#    bv = yelp_doc_model.biz_vector()
 
     
-
+matches = dv.most_similar('burger')
+matches = list(filter(lambda x: 'SENT_' in x[0], matches))
 
