@@ -44,5 +44,5 @@ sudo ./run.sh -b
 Note: the training of doc2vec model is time consuming, it takes about 10 minutes on AWS m4.xlarge instance.
 
 4. SUBMIT query to docker image: 
-sudo docker exec yelp-dev python /yelpanalysis/script/query.py l 'Burger King'
-sudo docker exec yelp-dev python /yelpanalysis/script/query.py s 'Best burger place in the town'
+./query.sh l 'Burger King'
+./query.sh s 'Best burger place in the town'
