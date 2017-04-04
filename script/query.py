@@ -54,8 +54,8 @@ def infer_from_label(label, n=10):
     """
     vec = model.docvecs[label]
     sims = model.docvecs.most_similar([vec], topn=n)
-    return sims    
-    
+    return sims
+
 
 # Load model from /tmp
 model = models.doc2vec.Doc2Vec.load('/tmp/d2vmodel.doc2vec')
@@ -74,6 +74,6 @@ if args.mode in ['l', 'label']:
 elif args.mode in ['s', 'sentence']:
     rslt=infer_from_sentence(args.query)
     for t in rslt:
-        print(t)    
+        print(t)
 else:
     print('Mode can either by [l]abel or [s]entence')
